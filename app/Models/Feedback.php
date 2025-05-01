@@ -11,7 +11,7 @@ class Feedback extends Model
     protected $table = 'feedbacks';
 
     protected $fillable = [
-        'specialist_id', 'rating', 'review',
+        'specialist_id', 'review',
     ];
 
     // Define the relationship to the User model (specialist)
