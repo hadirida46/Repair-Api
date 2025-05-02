@@ -1,43 +1,55 @@
 <?php
-
 namespace App\Http\Controllers;
 
-use Exception;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
-use App\Models\User;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Storage;
 
 class AuthController extends Controller
 {
-    public function login(Request $request)
-{
-    //laravel request validation 
-     $request->validate([
-        'email' => ['required','email'],
-        'password' => ['required','password'],
-    ]);
-    // Find the user by email
-    //laravel eloquent
-    $user = User::where('email', $request->email)->first();
+    public function register(Request $request)
+    {
+        // Validate input
+        $validator = Validator::make($request->all(), [
+            'name' => 'required|string|max:255',
+            'email' => 'required|string|email|max:255|unique:users',
+            'password' => 'required|string|min:8|confirmed',
+            'role' => 'required|in:user,specialist,admin',
+            'profile_image' => 'nullable|image|mimes:jpg,jpeg,png,gif|max:2048', // Validate image upload
+            'specialization' => 'required_if:role,specialist|string|max:255', // Only require specialization for specialists
+        ]);
 
-    if (!$user) {
-        return response()->json(['message' => 'User not found'], 401);
+        if ($validator->fails()) {
+            return response()->json([
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        // Handle profile image upload if provided
+        $profileImagePath = null;
+        if ($request->hasFile('profile_image')) {
+            $profileImagePath = $request->file('profile_image')->store('profile_images', 'public');
+        }
+
+        // Create user
+        $user = User::create([
+            'name' => $request->name,
+            'email' => $request->email,
+            'password' => Hash::make($request->password),
+            'role' => $request->role,
+            'profile_image' => $profileImagePath, // Store profile image path if provided
+            'specialization' => $request->role === 'specialist' ? $request->specialization : null, // Store specialization only for specialists
+        ]);
+
+        // Create token
+        $token = $user->createToken('API Token')->plainTextToken;
+
+        // Return response
+        return response()->json([
+            'user' => $user,
+            'token' => $token,
+        ], 201);
     }
-
-    // Check if the password matches
-    if (!Hash::check($request->password, $user->password)) {
-        return response()->json(['message' => 'Invalid credentials'], 401);
-    }
-
-    // Generate and return the token
-    //bearer token
-     $token = $user->createToken('auth_token')->plainTextToken;
-
-    return response()->json([
-        'access_token' => $token,
-        'token_type' => 'Bearer',
-    ]);
-}
-
-
 }

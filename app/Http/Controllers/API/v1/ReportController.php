@@ -1,10 +1,14 @@
 <?php
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\API\v1;
+
 
 use App\Http\Requests\StoreReportRequest;
 use App\Http\Requests\UpdateReportRequest;
 use App\Models\Report;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
+use App\Http\Controllers\Controller;
+
 
 class ReportController extends Controller
 {
@@ -21,11 +25,15 @@ class ReportController extends Controller
      * Store a newly created resource in storage.
      */
     public function store(StoreReportRequest $request)
-    {
-        $validated = $request->validated();
-        $report = Report::create($validated);
-        return response()->json($report, 201);
-    }
+{
+    $validated = $request->validated();
+    $validated['user_id'] = Auth::id(); 
+
+    $report = Report::create($validated);
+
+    return response()->json($report, 201);
+}
+
 
     /**
      * Display the specified resource.
