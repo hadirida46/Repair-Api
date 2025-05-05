@@ -1,64 +1,95 @@
 <?php
 namespace App\Http\Controllers\API\v1;
 
-
-use App\Http\Requests\StoreReportRequest;
-use App\Http\Requests\UpdateReportRequest;
-use App\Models\Report;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\Controller;
-
+use App\Models\Report;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class ReportController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
-    {
-        $reports = DB::table('reports')->get();
-        return response()->json($reports);
-    }
-
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(StoreReportRequest $request)
+    // Create a report
+    public function create(Request $request)
 {
-    $validated = $request->validated();
-    $validated['user_id'] = Auth::id(); 
+    // Validate the input data
+    $request->validate([
+        'title' => 'required|string|max:255',
+        'description' => 'required|string',
+        'images' => 'nullable|json',
+        'latitude' => 'nullable|numeric',
+        'longitude' => 'nullable|numeric',
+        'job_id' => 'nullable|exists:jobs,id',  
+    ]);
 
-    $report = Report::create($validated);
+    // Access request data
+    $title = $request->input('title');
+    $description = $request->input('description');
+    $images = $request->input('images');
+    $latitude = $request->input('latitude');
+    $longitude = $request->input('longitude');
+    $job_id = $request->input('job_id');
 
-    return response()->json($report, 201);
+    // Get the authenticated user
+    $user = Auth::user();
+
+    // Create the report
+    $report = Report::create([
+        'user_id' => $user->id,
+        'title' => $title,
+        'description' => $description,
+        'images' => $images,
+        'latitude' => $latitude,
+        'longitude' => $longitude,
+        'job_id' => $job_id,
+    ]);
+
+    return response()->json([
+        'message' => 'Report created successfully',
+        'report' => $report
+    ], 201);
 }
 
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(Report $report)
+    // Fetch reports for a user
+    public function index()
     {
+        $reports = Report::where('user_id', Auth::id())->get();
+        return response()->json($reports);
+    }
+
+    // Show a specific report
+    public function show($id)
+    {
+        $report = Report::findOrFail($id);
         return response()->json($report);
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(UpdateReportRequest $request, Report $report)
+    // Update a report
+    public function update(Request $request, $id)
     {
-        $validated = $request->validated();
-        $report->update($validated);
-        return response()->json($report);
+        $request->validate([
+            'title' => 'required|string|max:255',
+            'description' => 'required|string',
+            'images' => 'nullable|json',
+        ]);
+
+        $report = Report::findOrFail($id);
+        $report->update($request->only(['title', 'description', 'images']));
+
+        return response()->json([
+            'message' => 'Report updated successfully',
+            'report' => $report
+        ]);
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(Report $report)
+    // Delete a report
+    public function destroy($id)
     {
+        $report = Report::findOrFail($id);
         $report->delete();
-        return response()->json(null, 204);
+
+        return response()->json([
+            'message' => 'Report deleted successfully'
+        ]);
     }
 }
