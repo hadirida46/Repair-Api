@@ -28,8 +28,8 @@
         Route::delete('/reports/{id}', [ReportController::class, 'destroy']);  
     });
 
-    Route::post('assign-job/{reportId}/{specialistId}', [JobController::class, 'assignJobToSpecialist']);
-    
     Route::post('/chat/send', [ChatController::class, 'sendMessage']);
     Route::get('/chat/{sender_id}/{receiver_id}', [ChatController::class, 'getMessages']);
     Route::get('/chat-list/{user_id}', [ChatController::class, 'getChatList']);
+
+    

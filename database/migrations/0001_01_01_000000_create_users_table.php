@@ -25,6 +25,8 @@ return new class extends Migration
             $table->enum('specialization', ['contractor', 'handyman', 'plumber', 'electrician'])->nullable();
             $table->rememberToken();
             $table->timestamps();
+            $table->decimal('latitude', 10, 8)->nullable();
+            $table->decimal('longitude', 11, 8)->nullable();
         });
 
         // Password reset tokens table
@@ -43,26 +45,16 @@ return new class extends Migration
             $table->longText('payload');
             $table->integer('last_activity')->index();
         });
-
-        // Feedback table
-        Schema::create('feedbacks', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('user_id')->constrained()->onDelete('cascade');
-            $table->foreignId('specialist_id')->constrained()->onDelete('cascade');
-            $table->text('feedback');
-            $table->integer('rating');
-            $table->timestamps();
-        });
     }
 
     /**
      * Reverse the migrations.
      */
     public function down(): void
-    {
-        Schema::dropIfExists('users');
-        Schema::dropIfExists('password_reset_tokens');
-        Schema::dropIfExists('sessions');
-        Schema::dropIfExists('feedbacks');
-    }
+{
+    Schema::dropIfExists('sessions');
+    Schema::dropIfExists('password_reset_tokens');
+    Schema::dropIfExists('users');
+}
+
 };

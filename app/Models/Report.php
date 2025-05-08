@@ -13,13 +13,12 @@ class Report extends Model
         'title',
         'description',
         'images',
-        'job_id',
         'latitude',
         'longitude',
+        'location',
+        'specialist_type',
+        "status",
     ];
 
-    // You can add relationships here if needed, for example:
-    // public function user() {
-    //     return $this->belongsTo(User::class);
-    // }
+   
 }

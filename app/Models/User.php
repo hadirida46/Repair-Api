@@ -56,7 +56,7 @@ class User extends Authenticatable
     use HasFactory, Notifiable, HasRole, HasApiTokens;
 
     protected $fillable = [
-        'first_name', 'last_name', 'email', 'password', 'role', 'latitude', 'longitude', 'profile_image', 'bio', 'specialization',
+        'first_name', 'last_name', 'email', 'password', 'role', 'latitude', 'longitude', 'profile_image', 'bio', 'specialization', 'location'
     ];
 
     protected $hidden = [
@@ -65,17 +65,19 @@ class User extends Authenticatable
 
     protected $casts = [
         'email_verified_at' => 'datetime',
+        'lat' => 'float',
+        'long' => 'float',
     ];
 
     protected $attributes = [
         'role' => 'user', // Default role
     ];
-
-    // Feedbacks relationship (assuming Feedback has 'specialist_id' as the foreign key)
-    public function feedbacks()
-    {
-        return $this->hasMany(Feedback::class, 'specialist_id');
-    }
+    
+    // // Feedbacks relationship (assuming Feedback has 'specialist_id' as the foreign key)
+    // public function feedbacks()
+    // {
+    //     return $this->hasMany(Feedback::class, 'specialist_id');
+    // }
 
     // Reports relationship
     public function reports()
@@ -107,8 +109,16 @@ class User extends Authenticatable
     }
 
     // Get profile image URL
-    public function getProfileImageUrl()
-    {
-        return $this->profile_image ? asset('storage/' . $this->profile_image) : asset('images/default-profile.png');
+  
+    public function getProfileImageAttribute($value)
+{
+    // If it's already a full URL, just return it
+    if (filter_var($value, FILTER_VALIDATE_URL)) {
+        return $value;
     }
+
+    // Otherwise, return the full URL to the stored image
+    return $value ? asset('storage/' . $value) : null;
+}
+
 }

@@ -1,6 +1,7 @@
 <?php
 namespace App\Http\Controllers;
 
+use App\Http\Resources\v1\UserResource;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -19,7 +20,7 @@ class ProfileController extends Controller
         // Return the user data in a JSON format
         return response()->json([
             'status' => 'success',
-            'data' => $user
+            'data' =>new UserResource($user),
         ]);
     }
 
@@ -32,12 +33,15 @@ class ProfileController extends Controller
     $validator = Validator::make($request->all(), [
         'first_name' => 'nullable|string|max:255',
         'last_name' => 'nullable|string|max:255',
+        'email' => 'nullable|email|max:255|unique:users,email,' . $user->id,
         'bio' => 'nullable|string',
+        'location' => 'nullable|string|max:255',
         'specialization' => 'nullable|in:contractor,handyman,plumber,electrician',
         'latitude' => 'nullable|numeric|between:-90,90',
         'longitude' => 'nullable|numeric|between:-180,180',
-        'profile_image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+        'profile_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
     ]);
+
 
     if ($validator->fails()) {
         return response()->json([
@@ -46,17 +50,25 @@ class ProfileController extends Controller
         ], 422);
     }
 
+    // Handle the profile image upload
+    if ($request->hasFile('profile_image')) {
+        $imagePath = $request->file('profile_image')->store('profile_images', 'public');
+    } else {
+        $imagePath = $request->profile_image ?? $user->profile_image;
+    }
+
+    logger($imagePath);
     // Update the user profile
     $user->update([
         'first_name' => $request->first_name,
         'last_name' => $request->last_name,
+        'email' => $request->email,
         'bio' => $request->bio,
+        'location' => $request->location,
         'specialization' => $request->specialization,
         'latitude' => $request->latitude,
         'longitude' => $request->longitude,
-        'profile_image' => $request->hasFile('profile_image')
-            ? $request->file('profile_image')->store('profile_images', 'public')
-            : $user->profile_image,
+        'profile_image' => $imagePath,
     ]);
 
     return response()->json([
@@ -64,6 +76,7 @@ class ProfileController extends Controller
         'user' => $user
     ]);
 }
+
 
 
 

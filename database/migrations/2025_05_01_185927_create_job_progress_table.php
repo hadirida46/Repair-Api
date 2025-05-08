@@ -13,7 +13,6 @@ return new class extends Migration
 {
     Schema::create('job_progresses', function (Blueprint $table) {
         $table->id();
-        $table->foreignId('job_id')->constrained();  // Reference to the Job table
         $table->string('image_path');  // To store the image path for progress images
         $table->timestamps();
     });
@@ -23,7 +22,12 @@ return new class extends Migration
      * Reverse the migrations.
      */
     public function down(): void
-    {
-        Schema::dropIfExists('job_progress');
-    }
+{
+    Schema::table('job_progresses', function (Blueprint $table) {
+        
+    });
+
+    Schema::dropIfExists('job_progresses');
+}
+
 };

@@ -6,7 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Facades\Storage;
 
-class UserResource extends JsonResource
+class ReportResource extends JsonResource
 {
     /**
      * Transform the resource into an array.
@@ -19,15 +19,14 @@ class UserResource extends JsonResource
         
         return [
             "id"=>$this->id,
-            "first_name"=>$this->first_name,
-            "last_name"=>$this->last_name,
-            "profile_image"=>$this->profile_image,
-            "email"=>$this->email,
-            "bio"=>$this->bio,
+            "title"=>$this->title,
+            "description"=>$this->description,
+            "images"=>$this->images,
             "location"=>$this->location,
-            "specialization"=>$this->specialization,   
             "latitude" => $this->latitude,
             "longitude" => $this->longitude,
+            "specialist_type"=>$this->specialist_type,
+            "status"=>$this->status,
         ];
     }
 }

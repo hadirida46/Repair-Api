@@ -31,7 +31,8 @@ class AuthController extends Controller
 
     // Create user
     $user = User::create([
-        'name' => $fullName,
+        'first_name' => $request->first_name,
+        'last_name'=>$request->last_name,
         'email' => $request->email,
         'password' => Hash::make($request->password),
         'role' => $request->role,
@@ -48,30 +49,27 @@ class AuthController extends Controller
 }
 public function login(Request $request)
 {
-    
     $request->validate([
         'email' => 'required|email',
         'password' => 'required|string',
     ]);
 
-    
     $user = User::where('email', $request->email)->first();
 
-    // Check if user exists and password is correct
     if (!$user || !Hash::check($request->password, $user->password)) {
         return response()->json([
             'message' => 'Invalid email or password.'
         ], 401);
     }
 
-    
     $token = $user->createToken('API Token')->plainTextToken;
 
-    // Return response
+    // Return only required fields including the role
     return response()->json([
-        'user' => $user,
         'token' => $token,
+        'role' => $user->role, // This assumes you have a 'role' column in users table
     ], 200);
 }
+
 
 }

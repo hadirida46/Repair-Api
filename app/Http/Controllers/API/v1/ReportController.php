@@ -15,10 +15,12 @@ class ReportController extends Controller
     $request->validate([
         'title' => 'required|string|max:255',
         'description' => 'required|string',
-        'images' => 'nullable|json',
+        'images.*' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         'latitude' => 'nullable|numeric',
         'longitude' => 'nullable|numeric',
-        'job_id' => 'nullable|exists:jobs,id',  
+        'location' => 'required|string|max:255',
+        'specialist_type' => 'nullable|in:handyman,electrician,plumber,contractor',
+
     ]);
 
     // Access request data
@@ -27,20 +29,29 @@ class ReportController extends Controller
     $images = $request->input('images');
     $latitude = $request->input('latitude');
     $longitude = $request->input('longitude');
-    $job_id = $request->input('job_id');
+    $location = $request->input('location');
+    $specialistType = $request->input('specialist_type');
 
     // Get the authenticated user
     $user = Auth::user();
-
+    $imagePaths = [];
+    if ($request->hasFile('images')) {
+        foreach ($request->file('images') as $image) {
+            $path = $image->store('reports/' . $user->id, 'public');
+            $imageUrl = asset('storage/' . $path);
+            $imagePaths[] = $imageUrl;
+        }
+    }
     // Create the report
     $report = Report::create([
         'user_id' => $user->id,
         'title' => $title,
         'description' => $description,
-        'images' => $images,
+        'images' => json_encode($imagePaths),
         'latitude' => $latitude,
         'longitude' => $longitude,
-        'job_id' => $job_id,
+        'location'=>$location,
+        'specialist_type' => $specialistType,
     ]);
 
     return response()->json([
@@ -52,44 +63,43 @@ class ReportController extends Controller
 
     // Fetch reports for a user
     public function index()
-    {
-        $reports = Report::where('user_id', Auth::id())->get();
-        return response()->json($reports);
-    }
+{
+    $userId = Auth::id();
+    $reports = Report::where('user_id', $userId)
+                     ->orWhere('specialist_id', $userId)
+                     ->get();
+
+    return response()->json($reports);
+}
+
 
     // Show a specific report
     public function show($id)
-    {
-        $report = Report::findOrFail($id);
-        return response()->json($report);
+{
+    $report = Report::findOrFail($id);
+
+    if (is_string($report->images)) {
+        $report->images = json_decode($report->images);
     }
+
+    return response()->json($report);
+}
+
 
     // Update a report
-    public function update(Request $request, $id)
-    {
-        $request->validate([
-            'title' => 'required|string|max:255',
-            'description' => 'required|string',
-            'images' => 'nullable|json',
-        ]);
-
-        $report = Report::findOrFail($id);
-        $report->update($request->only(['title', 'description', 'images']));
-
-        return response()->json([
-            'message' => 'Report updated successfully',
-            'report' => $report
-        ]);
-    }
+    
 
     // Delete a report
     public function destroy($id)
-    {
-        $report = Report::findOrFail($id);
-        $report->delete();
-
-        return response()->json([
-            'message' => 'Report deleted successfully'
-        ]);
+{
+    $report = Report::findOrFail($id);
+    if ($report->user_id !== Auth::id()) {
+        return response()->json(['message' => 'Unauthorized'], 403);
     }
+    $report->delete();
+
+    return response()->json([
+        'message' => 'Report deleted successfully'
+    ]);
+}
 }
