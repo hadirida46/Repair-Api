@@ -21,11 +21,15 @@
         Route::delete('/profile/delete', [ProfileController::class, 'destroy']);
     });
     
-    Route::middleware('auth:api')->group(function () {
+    Route::middleware('auth:sanctum')->group(function () {
         Route::post('/reports', [ReportController::class, 'create']); 
         Route::get('/reports', [ReportController::class, 'index']);  
         Route::get('/reports/{id}', [ReportController::class, 'show']);  
-        Route::delete('/reports/{id}', [ReportController::class, 'destroy']);  
+        Route::delete('/reports/{id}', [ReportController::class, 'destroy']); 
+        Route::get('/reports/{id}/specialists',[ReportController::class, 'findSpecialists']);
+        Route::get('/user/reports', [ReportController::class, 'getReports']);
+        Route::post('/reports/{id}/assign', [ReportController::class, 'assignToSpecialist']);
+        Route::patch('/reports/{id}/status', [ReportController::class, 'updateStatus']);
     });
 
     Route::post('/chat/send', [ChatController::class, 'sendMessage']);

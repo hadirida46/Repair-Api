@@ -3,103 +3,189 @@ namespace App\Http\Controllers\API\v1;
 
 use App\Http\Controllers\Controller;
 use App\Models\Report;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use App\Http\Resources\v1\ReportResource;
+use App\Http\Resources\v1\UserResource;
 
 class ReportController extends Controller
-{
-    // Create a report
-    public function create(Request $request)
-{
-    // Validate the input data
-    $request->validate([
-        'title' => 'required|string|max:255',
-        'description' => 'required|string',
-        'images.*' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
-        'latitude' => 'nullable|numeric',
-        'longitude' => 'nullable|numeric',
-        'location' => 'required|string|max:255',
-        'specialist_type' => 'nullable|in:handyman,electrician,plumber,contractor',
+{   
+    public function findSpecialists($id)
+    {
+        $report = Report::findOrFail($id);
 
-    ]);
+        $lat = $report->latitude;
+        $lng = $report->longitude;
+        $type = $report->specialist_type;
 
-    // Access request data
-    $title = $request->input('title');
-    $description = $request->input('description');
-    $images = $request->input('images');
-    $latitude = $request->input('latitude');
-    $longitude = $request->input('longitude');
-    $location = $request->input('location');
-    $specialistType = $request->input('specialist_type');
+        $specialists = User::select([
+            '*',
+            DB::raw("(6371 * acos(
+                cos(radians($lat)) * 
+                cos(radians(latitude)) * 
+                cos(radians(longitude) - radians($lng)) + 
+                sin(radians($lat)) * 
+                sin(radians(latitude))
+            )) AS distance")
+        ])
+        ->where('role', 'specialist')
+        ->where('specialization', $type)
+        ->orderBy('distance')
+        ->get();
 
-    // Get the authenticated user
-    $user = Auth::user();
-    $imagePaths = [];
-    if ($request->hasFile('images')) {
-        foreach ($request->file('images') as $image) {
-            $path = $image->store('reports/' . $user->id, 'public');
-            $imageUrl = asset('storage/' . $path);
-            $imagePaths[] = $imageUrl;
-        }
+        return response()->json($specialists);
     }
-    // Create the report
-    $report = Report::create([
-        'user_id' => $user->id,
-        'title' => $title,
-        'description' => $description,
-        'images' => json_encode($imagePaths),
-        'latitude' => $latitude,
-        'longitude' => $longitude,
-        'location'=>$location,
-        'specialist_type' => $specialistType,
+    public function assignToSpecialist(Request $request, $id)
+{
+    $request->validate([
+        'specialist_id' => 'required|exists:users,id',
     ]);
+
+    $report = Report::findOrFail($id);
+    
+    $report->specialist_id = $request->specialist_id;
+    $report->status = 'accepted';
+    $report->save();
+
+    $specialist = User::find($report->specialist_id);
 
     return response()->json([
-        'message' => 'Report created successfully',
-        'report' => $report
-    ], 201);
+        'message' => 'Specialist assigned (or reassigned) successfully',
+        'report' => $report,
+        'specialist' => new UserResource($specialist)
+    ]);
 }
 
+
+public function updateStatus(Request $request, $id)
+{
+    $request->validate([
+        'status' => 'required|in:waiting,accepted,completed,rejected,escalted,in progress',
+    ]);
+
+    $report = Report::findOrFail($id);
+    $user = Auth::user();
+
+    if ($user->id !== $report->user_id && $user->id !== $report->specialist_id) {
+        return response()->json(['message' => 'Unauthorized'], 403);
+    }
+
+    $report->status = $request->status;
+    $report->save();
+
+    // Load the specialist details
+    $specialist = User::find($report->specialist_id);
+
+    return response()->json([
+        'message' => 'Status updated successfully',
+        'report' => new ReportResource($report),
+        'specialist' => new UserResource($specialist)  // Return specialist details
+    ]);
+}
+
+
+    // Create a report
+    public function create(Request $request)
+    {
+        // Validate the input data
+        $request->validate([
+            'title' => 'required|string|max:255',
+            'description' => 'required|string',
+            'images.*' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'latitude' => 'nullable|numeric',
+            'longitude' => 'nullable|numeric',
+            'location' => 'required|string|max:255',
+            'specialist_type' => 'nullable|in:handyman,electrician,plumber,contractor',
+            'status' => 'waiting', 
+        ]);
+
+        // Access request data
+        $title = $request->input('title');
+        $description = $request->input('description');
+        $images = $request->input('images');
+        $latitude = $request->input('latitude');
+        $longitude = $request->input('longitude');
+        $location = $request->input('location');
+        $specialistType = $request->input('specialist_type');
+
+        // Get the authenticated user
+        $user = Auth::user();
+        $imagePaths = [];
+        if ($request->hasFile('images')) {
+            foreach ($request->file('images') as $image) {
+                $path = $image->store('reports/' . $user->id, 'public');
+                $imageUrl = asset('storage/' . $path);
+                $imagePaths[] = $imageUrl;
+            }
+        }
+        // Create the report
+        $report = Report::create([
+            'user_id' => $user->id,
+            'title' => $title,
+            'description' => $description,
+            'images' => json_encode($imagePaths),
+            'latitude' => $latitude,
+            'longitude' => $longitude,
+            'location' => $location,
+            'specialist_type' => $specialistType,
+        ]);
+
+        return response()->json([
+            'message' => 'Report created successfully',
+            'report' => $report
+        ], 201);
+    }
 
     // Fetch reports for a user
     public function index()
-{
-    $userId = Auth::id();
-    $reports = Report::where('user_id', $userId)
-                     ->orWhere('specialist_id', $userId)
-                     ->get();
+    {
+        $userId = Auth::id();
+        $reports = Report::where('user_id', $userId)
+                         ->orWhere('specialist_id', $userId)
+                         ->get();
 
-    return response()->json($reports);
-}
-
+        return response()->json($reports);
+    }
 
     // Show a specific report
     public function show($id)
-{
-    $report = Report::findOrFail($id);
+    {
+        $report = Report::findOrFail($id);
 
-    if (is_string($report->images)) {
-        $report->images = json_decode($report->images);
+        if (is_string($report->images)) {
+            $report->images = json_decode($report->images);
+        }
+
+        return response()->json($report);
+    }
+    public function getReports()
+{
+    $user = Auth::user();
+    $reports = $user->reports;
+    $reports = $user->reports()->orderBy('created_at', 'desc')->get();
+    foreach ($reports as $report) {
+        if (is_string($report->images)) {
+            $report->images = json_decode($report->images);
+        }
     }
 
-    return response()->json($report);
+    return response()->json(['reports' => $reports]);
 }
 
-
-    // Update a report
-    
 
     // Delete a report
     public function destroy($id)
-{
-    $report = Report::findOrFail($id);
-    if ($report->user_id !== Auth::id()) {
-        return response()->json(['message' => 'Unauthorized'], 403);
-    }
-    $report->delete();
+    {
+        $report = Report::findOrFail($id);
+        if ($report->user_id !== Auth::id()) {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+        $report->delete();
 
-    return response()->json([
-        'message' => 'Report deleted successfully'
-    ]);
-}
+        return response()->json([
+            'message' => 'Report deleted successfully'
+        ]);
+    }
 }

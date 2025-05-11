@@ -10,6 +10,7 @@ class Report extends Model
 
     protected $fillable = [
         'user_id',
+        'specialist_id',
         'title',
         'description',
         'images',
@@ -18,7 +19,16 @@ class Report extends Model
         'location',
         'specialist_type',
         "status",
-    ];
+    ];public function user()
+    {
+        return $this->belongsTo(User::class, 'user_id');
+    }
+    
+    public function specialist()
+    {
+        return $this->belongsTo(User::class, 'specialist_id');
+    }
+    
 
    
 }

@@ -27,6 +27,9 @@ class ReportResource extends JsonResource
             "longitude" => $this->longitude,
             "specialist_type"=>$this->specialist_type,
             "status"=>$this->status,
+            "specialist_id" => $this->specialist_id,
+            "specialist" => new UserResource($this->whenLoaded('specialist')), 
+            "user" => new UserResource($this->whenLoaded('user')),
         ];
     }
 }
