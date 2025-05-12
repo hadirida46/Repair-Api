@@ -19,7 +19,11 @@ class Report extends Model
         'location',
         'specialist_type',
         "status",
-    ];public function user()
+    ];
+    protected $casts = [
+        'images' => 'array',  
+    ];
+    public function user()
     {
         return $this->belongsTo(User::class, 'user_id');
     }

@@ -44,9 +44,8 @@ class ReportController extends Controller
     ]);
 
     $report = Report::findOrFail($id);
-    
     $report->specialist_id = $request->specialist_id;
-    $report->status = 'accepted';
+    $report->status = 'waiting';
     $report->save();
 
     $specialist = User::find($report->specialist_id);
@@ -71,17 +70,15 @@ public function updateStatus(Request $request, $id)
     if ($user->id !== $report->user_id && $user->id !== $report->specialist_id) {
         return response()->json(['message' => 'Unauthorized'], 403);
     }
-
     $report->status = $request->status;
     $report->save();
 
-    // Load the specialist details
     $specialist = User::find($report->specialist_id);
 
     return response()->json([
         'message' => 'Status updated successfully',
         'report' => new ReportResource($report),
-        'specialist' => new UserResource($specialist)  // Return specialist details
+        'specialist' => new UserResource($specialist)  
     ]);
 }
 
@@ -151,15 +148,21 @@ public function updateStatus(Request $request, $id)
 
     // Show a specific report
     public function show($id)
-    {
-        $report = Report::findOrFail($id);
+{
+    $user = Auth::user();
 
-        if (is_string($report->images)) {
-            $report->images = json_decode($report->images);
-        }
+    // Only allow specialists to view their assigned reports
+    $report = Report::where('id', $id)
+                    ->where('specialist_id', $user->id)
+                    ->firstOrFail();
 
-        return response()->json($report);
+    if (is_string($report->images)) {
+        $report->images = json_decode($report->images);
     }
+
+    return response()->json($report);
+}
+
     public function getReports()
 {
     $user = Auth::user();
@@ -188,4 +191,26 @@ public function updateStatus(Request $request, $id)
             'message' => 'Report deleted successfully'
         ]);
     }
+    public function myAssignedReports()
+{
+    $user = Auth::user();
+
+    if ($user->role !== 'specialist') {
+        return response()->json(['message' => 'Unauthorized'], 403);
+    }
+
+    $reports = Report::where('specialist_id', $user->id)
+                     ->orderBy('created_at', 'desc')
+                     ->with(['specialist', 'user'])
+                     ->get();
+
+    foreach ($reports as $report) {
+        if (is_string($report->images)) {
+            $report->images = json_decode($report->images);
+        }
+    }
+
+    return response()->json(['reports' => ReportResource::collection($reports)]);
+}
+
 }

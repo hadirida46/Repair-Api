@@ -22,6 +22,8 @@
     });
     
     Route::middleware('auth:sanctum')->group(function () {
+
+        Route::get('/reports/assigned', [ReportController::class, 'myAssignedReports']);
         Route::post('/reports', [ReportController::class, 'create']); 
         Route::get('/reports', [ReportController::class, 'index']);  
         Route::get('/reports/{id}', [ReportController::class, 'show']);  

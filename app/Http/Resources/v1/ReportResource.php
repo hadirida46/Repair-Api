@@ -14,8 +14,14 @@ class ReportResource extends JsonResource
      * @return array<string, mixed>
      */
     public function toArray(Request $request): array
+    {
+        $images = $this->images;
+        if (is_array($images)) {
+            $images = array_map(function ($image) {
+                return Storage::url($image); 
+            }, $images);
+        }
 
-    {   
         
         return [
             "id"=>$this->id,
