@@ -35,7 +35,8 @@ class ReportResource extends JsonResource
             "status"=>$this->status,
             "specialist_id" => $this->specialist_id,
             "specialist" => new UserResource($this->whenLoaded('specialist')), 
-            "user" => new UserResource($this->whenLoaded('user')),
+            "reported_by" => new UserResource($this->whenLoaded('user')),
+            'created_at' => $this->created_at,
         ];
     }
 }

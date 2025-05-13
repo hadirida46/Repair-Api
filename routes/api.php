@@ -9,7 +9,7 @@
     use App\Http\Controllers\JobController;
     use App\Http\Controllers\ChatController;
     use App\Http\Controllers\ChatListController;
-    
+    use App\Http\Controllers\JobProgressController;
 
     Route::post('/register', [AuthController::class, 'register']);
     Route::post('/login', [AuthController::class, 'login']);
@@ -34,6 +34,10 @@
         Route::patch('/reports/{id}/status', [ReportController::class, 'updateStatus']);
     });
 
+    Route::middleware('auth:sanctum')->group(function () {
+    Route::get('reports/{report}/progress', [JobProgressController::class, 'index']);
+    Route::post('reports/{report}/progress', [JobProgressController::class, 'store']);
+    });
     Route::post('/chat/send', [ChatController::class, 'sendMessage']);
     Route::get('/chat/{sender_id}/{receiver_id}', [ChatController::class, 'getMessages']);
     Route::get('/chat-list/{user_id}', [ChatController::class, 'getChatList']);

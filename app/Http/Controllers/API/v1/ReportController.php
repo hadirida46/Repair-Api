@@ -61,8 +61,9 @@ class ReportController extends Controller
 public function updateStatus(Request $request, $id)
 {
     $request->validate([
-        'status' => 'required|in:waiting,accepted,completed,rejected,escalted,in progress',
-    ]);
+    'status' => 'required|in:waiting,completed,rejected,escalated,in progress',
+]);
+
 
     $report = Report::findOrFail($id);
     $user = Auth::user();
@@ -83,10 +84,8 @@ public function updateStatus(Request $request, $id)
 }
 
 
-    // Create a report
     public function create(Request $request)
     {
-        // Validate the input data
         $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'required|string',
@@ -98,7 +97,6 @@ public function updateStatus(Request $request, $id)
             'status' => 'waiting', 
         ]);
 
-        // Access request data
         $title = $request->input('title');
         $description = $request->input('description');
         $images = $request->input('images');
@@ -107,7 +105,6 @@ public function updateStatus(Request $request, $id)
         $location = $request->input('location');
         $specialistType = $request->input('specialist_type');
 
-        // Get the authenticated user
         $user = Auth::user();
         $imagePaths = [];
         if ($request->hasFile('images')) {
@@ -117,7 +114,6 @@ public function updateStatus(Request $request, $id)
                 $imagePaths[] = $imageUrl;
             }
         }
-        // Create the report
         $report = Report::create([
             'user_id' => $user->id,
             'title' => $title,
@@ -142,7 +138,7 @@ public function updateStatus(Request $request, $id)
         $reports = Report::where('user_id', $userId)
                          ->orWhere('specialist_id', $userId)
                          ->get();
-
+        
         return response()->json($reports);
     }
 
@@ -151,7 +147,6 @@ public function updateStatus(Request $request, $id)
 {
     $user = Auth::user();
 
-    // Only allow specialists to view their assigned reports
     $report = Report::where('id', $id)
                     ->where('specialist_id', $user->id)
                     ->firstOrFail();
@@ -159,7 +154,7 @@ public function updateStatus(Request $request, $id)
     if (is_string($report->images)) {
         $report->images = json_decode($report->images);
     }
-
+    $report->reported_by = $report->user; 
     return response()->json($report);
 }
 
@@ -192,25 +187,27 @@ public function updateStatus(Request $request, $id)
         ]);
     }
     public function myAssignedReports()
-{
-    $user = Auth::user();
-
-    if ($user->role !== 'specialist') {
-        return response()->json(['message' => 'Unauthorized'], 403);
-    }
-
-    $reports = Report::where('specialist_id', $user->id)
-                     ->orderBy('created_at', 'desc')
-                     ->with(['specialist', 'user'])
-                     ->get();
-
-    foreach ($reports as $report) {
-        if (is_string($report->images)) {
-            $report->images = json_decode($report->images);
+    {
+        $user = Auth::user();
+    
+        if ($user->role !== 'specialist') {
+            return response()->json(['message' => 'Unauthorized'], 403);
         }
+    
+        $reports = Report::where('specialist_id', $user->id)
+                         ->whereIn('status', ['waiting', 'in progress']) 
+                         ->orderBy('created_at', 'desc')
+                         ->with(['specialist', 'user'])
+                         ->get();
+    
+        foreach ($reports as $report) {
+            if (is_string($report->images)) {
+                $report->images = json_decode($report->images);
+            }
+        }
+    
+        return response()->json(['reports' => ReportResource::collection($reports)]);
     }
-
-    return response()->json(['reports' => ReportResource::collection($reports)]);
-}
+    
 
 }

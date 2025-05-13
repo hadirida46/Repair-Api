@@ -15,7 +15,7 @@ return new class extends Migration
 
             $table->string('title');
             $table->text('description');
-            $table->enum('status', ['waiting', 'accepted', 'completed','rejected','escalted','in progress'])->default('waiting');
+            $table->enum('status', ['waiting', 'completed','rejected','escalted','in progress'])->default('waiting');
             $table->json('images')->nullable();
 
             $table->string('location');

@@ -32,7 +32,11 @@ class Report extends Model
     {
         return $this->belongsTo(User::class, 'specialist_id');
     }
-    
+    public function jobProgress()
+{
+    return $this->hasMany(JobProgress::class);
+}
+
 
    
 }
