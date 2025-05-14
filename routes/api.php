@@ -10,6 +10,8 @@
     use App\Http\Controllers\ChatController;
     use App\Http\Controllers\ChatListController;
     use App\Http\Controllers\JobProgressController;
+    use App\Http\Controllers\FeedbackController;
+
 
     Route::post('/register', [AuthController::class, 'register']);
     Route::post('/login', [AuthController::class, 'login']);
@@ -37,9 +39,14 @@
     Route::middleware('auth:sanctum')->group(function () {
     Route::get('reports/{report}/progress', [JobProgressController::class, 'index']);
     Route::post('reports/{report}/progress', [JobProgressController::class, 'store']);
+
     });
     Route::post('/chat/send', [ChatController::class, 'sendMessage']);
     Route::get('/chat/{sender_id}/{receiver_id}', [ChatController::class, 'getMessages']);
     Route::get('/chat-list/{user_id}', [ChatController::class, 'getChatList']);
 
-    
+    Route::middleware('auth:sanctum')->group(function () {
+        Route::post('/feedback', [FeedbackController::class, 'store']);
+        Route::get('/feedback/specialist/{specialist_id}', [FeedbackController::class, 'getFeedbackForSpecialist']);
+        Route::get('/feedback/specialist', [FeedbackController::class, 'getFeedbackBySpecialistToken']);
+    });

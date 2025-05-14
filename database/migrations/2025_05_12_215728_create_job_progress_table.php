@@ -14,8 +14,7 @@ return new class extends Migration
         Schema::create('job_progress', function (Blueprint $table) {
             $table->id();
             $table->foreignId('report_id')->constrained()->onDelete('cascade');
-            $table->text('specialist_comment');
-            $table->text('user_comment')->nullable();
+            $table->string('specialist_comment')->nullable()->default('');
             $table->string('image_path')->nullable();
             $table->timestamps();
         });

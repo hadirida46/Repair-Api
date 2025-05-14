@@ -13,8 +13,7 @@ class JobProgressController extends Controller
     public function store(Request $request, Report $report)
     {
         $validated = $request->validate([
-            'specialist_comment' => 'required|string',
-            'user_comment' => 'nullable|string',
+            'specialist_comment' => 'nullable|string',
             'image' => 'nullable|image|max:2048',
         ]);
 
@@ -28,6 +27,8 @@ class JobProgressController extends Controller
 
         return new JobProgressResource($progress);
     }
+
+
 
     public function index(Report $report)
     {

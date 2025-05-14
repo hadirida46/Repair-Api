@@ -10,7 +10,6 @@ class JobProgress extends Model
     protected $fillable = [
         'report_id',
         'specialist_comment',
-        'user_comment',
         'image_path',
     ];
 

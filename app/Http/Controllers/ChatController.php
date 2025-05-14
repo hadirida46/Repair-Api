@@ -56,10 +56,10 @@ class ChatController extends Controller
         ->pluck('latest_id');
 
     $messages = Chat::with(['sender' => function($query) {
-                $query->select('id', 'first_name', 'profile_image'); // Change 'name' to 'first_name'
+                $query->select('id', 'first_name', 'profile_image');
             }, 
             'receiver' => function($query) {
-                $query->select('id', 'first_name', 'profile_image'); // Change 'name' to 'first_name'
+                $query->select('id', 'first_name', 'profile_image');
             }])
         ->whereIn('id', $latestMessages)
         ->orderBy('created_at', 'desc')

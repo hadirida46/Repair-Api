@@ -18,7 +18,6 @@ class JobProgressResource extends JsonResource
             'id' => $this->id,
             'report_id' => $this->report_id,
             'specialist_comment' => $this->specialist_comment,
-            'user_comment' => $this->user_comment,
             'image_url' => $this->image_path ? asset('storage/' . $this->image_path) : null,
             'created_at' => $this->created_at->toDateTimeString(),
         ];
