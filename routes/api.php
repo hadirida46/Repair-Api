@@ -41,10 +41,12 @@
     Route::post('reports/{report}/progress', [JobProgressController::class, 'store']);
 
     });
+    
+    Route::middleware('auth:sanctum')->group(function () {
     Route::post('/chat/send', [ChatController::class, 'sendMessage']);
-    Route::get('/chat/{sender_id}/{receiver_id}', [ChatController::class, 'getMessages']);
-    Route::get('/chat-list/{user_id}', [ChatController::class, 'getChatList']);
-
+    Route::get('/chat/{receiver_id}', [ChatController::class, 'getMessages']);
+    Route::get('/chat-list', [ChatController::class, 'getChatList']);
+    });
     Route::middleware('auth:sanctum')->group(function () {
         Route::post('/feedback', [FeedbackController::class, 'store']);
         Route::get('/feedback/specialist/{specialist_id}', [FeedbackController::class, 'getFeedbackForSpecialist']);

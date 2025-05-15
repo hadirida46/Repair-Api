@@ -64,12 +64,14 @@ public function login(Request $request)
 
     $token = $user->createToken('API Token')->plainTextToken;
 
-    // Return only required fields including the role
     return response()->json([
         'token' => $token,
-        'role' => $user->role, // This assumes you have a 'role' column in users table
+        'role' => $user->role,
+        'user_id' => $user->id,
+        'name' => $user->first_name, 
     ], 200);
 }
+
 
 
 }

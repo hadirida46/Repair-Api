@@ -12,8 +12,8 @@ return new class extends Migration
     {
         Schema::create('chats', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('sender_id')->constrained('users'); // Assuming 'users' table exists
-            $table->foreignId('receiver_id')->constrained('users'); // Assuming 'users' table exists
+            $table->foreignId('sender_id')->constrained('users');
+            $table->foreignId('receiver_id')->constrained('users'); 
             $table->text('message');
             $table->enum('status', ['sent', 'received', 'read'])->default('sent');
             $table->timestamps();
