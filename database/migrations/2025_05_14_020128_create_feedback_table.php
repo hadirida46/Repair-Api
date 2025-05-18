@@ -15,7 +15,7 @@ return new class extends Migration
             Schema::create('feedback', function (Blueprint $table) {
                 $table->id();
                 $table->foreignId('user_id')->constrained()->onDelete('cascade');
-                $table->foreignId('specialist_id')->constrained()->onDelete('cascade');
+                $table->foreignId('specialist_id')->constrained('users')->onDelete('cascade');
                 $table->text('feedback');
                 $table->timestamps();
             });
@@ -28,7 +28,13 @@ return new class extends Migration
      * Reverse the migrations.
      */
     public function down(): void
-    {
-        Schema::dropIfExists('feedback');
-    }
+{
+    Schema::dropIfExists('feedback');
+}
+
+
+    
+
+
+
 };

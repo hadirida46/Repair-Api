@@ -91,20 +91,16 @@ public function logout(Request $request)
 
     // Delete the account
     public function destroy(Request $request)
-{
-    $user = Auth::user();
-
-    // Delete the user
-    $user->delete();
-
-    // Revoke all tokens
-    $user->tokens()->delete(); 
-
-    // $request->session()->invalidate();
-    // $request->session()->regenerateToken();
-
-    return response()->json(['message' => 'Account deleted successfully'], 200);
-}
+    {
+        $user = Auth::user();
+        
+        $user->tokens()->delete();
+    
+        $user->delete();
+    
+        return response()->json(['message' => 'Account deleted successfully'], 200);
+    }
+    
 
 
 }

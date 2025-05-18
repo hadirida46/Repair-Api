@@ -20,7 +20,8 @@ class FeedbackController extends Controller
         $feedback = Feedback::create([
             'user_id' => Auth::id(),
             'specialist_id' => $request->specialist_id,
-            'comment' => $request->comment, 
+            'feedback' => $request->comment,
+
         ]);
 
         return response()->json([

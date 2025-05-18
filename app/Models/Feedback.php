@@ -12,7 +12,7 @@ class Feedback extends Model
     protected $fillable = [
         'user_id',
         'specialist_id',
-        'comment',
+        'feedback', 
     ];
 
     /**

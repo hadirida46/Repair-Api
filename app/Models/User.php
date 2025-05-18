@@ -70,16 +70,9 @@ class User extends Authenticatable
     ];
 
     protected $attributes = [
-        'role' => 'user', // Default role
+        'role' => 'user', 
     ];
     
-    // // Feedbacks relationship (assuming Feedback has 'specialist_id' as the foreign key)
-    // public function feedbacks()
-    // {
-    //     return $this->hasMany(Feedback::class, 'specialist_id');
-    // }
-
-    // Reports relationship
     public function reports()
     {
         return $this->hasMany(Report::class);
@@ -101,23 +94,20 @@ class User extends Authenticatable
         return $this->role === 'admin';
     }
 
-    // Specialization validation (you can adjust the list of specializations)
     public function getSpecialization()
     {
         $validSpecializations = ['contractor', 'handyman', 'plumber', 'electrician'];
         return in_array($this->specialization, $validSpecializations) ? $this->specialization : null;
     }
 
-    // Get profile image URL
+    
   
     public function getProfileImageAttribute($value)
 {
-    // If it's already a full URL, just return it
     if (filter_var($value, FILTER_VALIDATE_URL)) {
         return $value;
     }
 
-    // Otherwise, return the full URL to the stored image
     return $value ? asset('storage/' . $value) : null;
 }
 
