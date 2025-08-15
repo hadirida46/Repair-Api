@@ -20,7 +20,7 @@ Built with **Laravel** and secured with **Laravel Sanctum**.
     - `inprogress` — Job currently being worked on.
     - `completed` — Job finished by specialist.
   - Users can delete reports if its in the stage if waiting, rejected or escalated.
-- **Feedback System** — Once a report is marked as `completed`, the user can submit feedback about the specialist (rating, comments).
+- **Feedback System** — Once a report is marked as `completed`, the user can submit feedback about the specialist so specialist and other user's can see.
 - **Location Data** — Stores coordinates and location names for reports (works with OpenStreetMap/Nominatim frontend search).
 - **Job Progress Tracking** — Upload images and comments for repair progress.
 - **Messaging System** — Send and receive messages between users and specialists.
